@@ -12,27 +12,24 @@ t$N.P<-(t$Nutr_NO2+t$Nutr_NO3+t$Nutr_NOX)/t$Nutr_PO4
 t$N.P.Si<-(t$Nutr_NO2+t$Nutr_NO3+t$Nutr_NOX)/t$Nutr_PO4/t$Nutr_SiO2
 
 colnames(t)
-#select dataframe geographic coordinates, flowcam and zooplankton
+#select dataframe geographic coordinates, zooplankton, abiotic parameters
 #
-df=t[,c(3:4, 130:158,43:64)]
-rownames(df)
-
-#remove NA rows for missing values
-df<-na.omit(df)##18 stations are remaining. All data available at these stations
+df=t[,c(3:4, 5:10, 166:168,72,75:76 ,127, 43:64)]
+#remove NA rows for zooplankton
+df<-na.omit(df)
 #Zoo
 colnames(df)
-zoo=df[,c(32:53)]
+zoo=df[,16:ncol(df)]
 #check for high number of zeros per column
 #colSums(zoo == 0)
-#zoo<-zoo[,c(2,4:5, 7, 13:16, 19:20)]
-
+#colnames(zoo)
+#zoo<-zoo[,c(2,4,5,7, 13:16,19:20)]
 #Geographic coordinates
 xy=df[,c(2,1)]
 
-#flowcam data as explanatory data
-abio=df[,3:31]
-#colSums(abio == 0)
-#abio<-abio[,c(2,4,6:8,10:11, 17, 19:24, 27)]
+#Abiotic
+abio=df[,3:15]
+
 
 #Mapping abiotic data
 #Large white squares, low values
@@ -40,19 +37,22 @@ abio=df[,3:31]
 #Large squares, high values
 #Remark: a priori, is "relative humidity"
 #a pertinent variable for aquatic organisms?
-par(mfrow=c(3,3),mar=c(2,2,3,1))
+par(mfrow=c(5,3),mar=c(2,2,3,1))
 for(i in 1:ncol(abio)){
   plot(xy,type="n",main=colnames(abio)[i],cex.main=1.5)
   map("worldHires",add=T)
   s.value(xy,scalewt(abio)[,i],cleg=0,add.p=T)
 }
-par(mfrow=c(3,3),mar=c(2,2,3,1))
+
+
+
+#zoo
+par(mfrow=c(5,3),mar=c(2,2,3,1))
 for(i in 1:ncol(zoo)){
   plot(xy,type="n",main=colnames(zoo)[i],cex.main=1.5)
   map("worldHires",add=T)
   s.value(xy,scalewt(zoo)[,i],cleg=0,add.p=T)
 }
-cor(zoo$Zoopl_Noctiluca,abio$Noctiluca)#71% correlation between flowcam and zooscan samples!
 
 #PCA of zoo
 #Keep 3 axes
@@ -60,10 +60,9 @@ cor(zoo$Zoopl_Noctiluca,abio$Noctiluca)#71% correlation between flowcam and zoos
 #matrices with a unique measurement unit
 #"scale=T", systematically in the opposite case
 #Here, keep 3 axes
-pcaz=dudi.pca(log(zoo+1),scale=F,scannf=FALSE, nf=3)
+pcaz=dudi.pca(log(zoo+1),scale=F, scannf=FALSE, nf=3)
 
-
-#Eigenvalues expressed in 33% axis 1
+#Eigenvalues expressed in %
 100*pcaz$eig/sum(pcaz$eig)
 
 #Zoo variables
@@ -74,10 +73,10 @@ s.label(pcaz$li)
 s.label(pcaz$li,add.p=T)
 
 #Correlation of abiotic variables?
-cor(log(abio+1),pcaz$li)
-## no strong correlation with axis 1
-##salinity, depth to be correlated with Axis 2
-##h axis3
+cor(abio,pcaz$li)
+##Salinity has the highest correlation with axis 1
+##NO2 seems to be correlated with Axis 2
+##
 #visualisations:
 #axes 1 and 2:
 par(mfrow=c(3,3))
@@ -88,6 +87,7 @@ for(i in 1:ncol(abio)){
 
 #The same with axes 1 and 3
 par(mfrow=c(3,3))
+
 for(i in 1:ncol(abio)){
   s.value(pcaz$li[,c(1,3)],scalewt(abio[,i]),
           sub=colnames(abio)[i],csub=3,possub="topleft")
@@ -96,18 +96,19 @@ for(i in 1:ncol(abio)){
 #PCA on Instrumental Variables (PCAIV)
 #In this numerical context, you can say that PCAIV <=> RDA
 #Keep 3 axes
-iv=pcaiv(pcaz,log(abio+1),scannf=FALSE, nf=3)
+iv=pcaiv(pcaz,abio,scannf=FALSE, nf=3)
 iv
 
 #Proportion of explained variance (R squared)
 sum(iv$eig)/sum(pcaz$eig)
-## log transformation of flowcam data --> 89%
+##60% explained
 #Global summary (axes 1 and 2)
 plot(iv)
 
 #Global summary (axes 1 and 3)
 plot(iv,yax=3)
-
+dev.off()
+scatter(iv,clab.col =0.5)
 #Predictions
 iv$li
 
@@ -125,10 +126,11 @@ s.match(iv$li,iv$ls)
 #Salinity is the most influential variable
 s.corcircle(iv$cor)
 
+dev.off()
 #Permutation test
 test=randtest(iv,999)
 test
-#Significant permutation test: siginficant relationship between zooplankton and flowcam groups
+#significant permutation test: siginficant relationship between zooplankton and abiotic parameters
 plot(test)
 
 #Mapping the three axes
@@ -141,8 +143,9 @@ for(i in 1:3){
   s.value(xy,iv$li[,i],cleg=0,add.p=T)
   box()
 }
-
-
+##axis1: determined by salinity;depth, current velocity (white boxes) and T, NH4 and SiO2 black boxes)
+##axis 2 : nutrients at the english coast
+##axis 3: also by nutriens, (temp and current velocity)
 
 ###spatial analysis ####
 
@@ -152,7 +155,7 @@ require(adespatial)
 require(vegan)
 install.packages("packfor", repos="http://R-Forge.R-project.org") 
 require(packfor)
-
+require(ade4)
 
 #A relatively recent development generating
 #spatial predictors hierarchically
@@ -163,7 +166,7 @@ require(packfor)
 #They are called Moran's Eigenvector Maps (MEM)
 #They are perfectly independent (orthogonal)
 library(spdep)
-#Choosing a connection network among stations
+
 #Choosing a connection network among stations
 load("data/chooseCN.Rdata")
 cn=chooseCN(xy,res="listw",type=1,plot.nb=F)
@@ -171,6 +174,7 @@ cn
 #cn<-connection.network
 #Triangulation is the simplest one
 dev.off()
+detach('package:purrr')
 plot(cn,xy)
 map("worldHires",add=T)
 
@@ -184,12 +188,12 @@ nb=edit(nb,xy) ##R loopt hierop vast
 
 #Plot again
 cn=nb2listw(nb,style="W")
+cnzoo<-cn
+save(cnzoo, file="cnzoo.RData")
+load("data/cnzoo.RData")
+cn<-cnzoo
 plot(cn,xy)
 map("worldHires",add=T)
-cnzooflow<-cn
-save(cnzooflow, file="cnzooflow.RData")
-load("data/cnzooflow.RData")
-cn<-cnzooflow
 library(adespatial)
 #MEM computation
 #There are 38 stations, so 38-1=37 spatial predictors
@@ -242,11 +246,10 @@ names(memtest)
 Umem=umem[,memtest[[7]]<0.05]
 
 
-
 #Test of zoo vs xy correlation
-randtest(pcaiv(pcaz,xy,scan=F),999)#significant
+randtest(pcaiv(pcaz,xy,scan=F),999)
 #Test of abio vs xy correlation
-#randtest(pcaiv(dudi.pca(abio,scan=F),xy,scan=F),999)
+randtest(pcaiv(dudi.pca(abio,scan=F),xy,scan=F),999)
 #They are strongly correlated to xy
 #suggesting that processes expressed at larger
 #scale than the scale of the studied area
@@ -255,27 +258,15 @@ randtest(pcaiv(pcaz,xy,scan=F),999)#significant
 #by detrending data from xy (removing xy effect)
 #through Orthogonal PCAIV
 zoo.o=pcaivortho(pcaz,xy,scan=F)
-abio.o=pcaivortho(dudi.pca(log(abio+1),scan=F),xy,scan=F)
+abio.o=pcaivortho(dudi.pca(abio,scan=F),xy,scan=F)
 
 #The detrended PCAIV
 iv=pcaiv(zoo.o,abio.o$tab)
-randtest(iv,999)##not significant
+randtest(iv,999)##significant
 #https://cran.r-project.org/web/packages/adespatial/vignettes/tutorial.html
 #Finding spatial predictors of iv
-#48 % of iv variance is explained by space (last line, AdjR2Cum)
-
-###spatialized of bio
-rda.mem1=rda(zoo.o$tab,Umem)
-
-R2a.mem1=RsquareAdj(rda.mem1)$adj.r.squared
-fw.mem1=forward.sel(zoo.o$tab,Umem,adjR2thresh=R2a.mem1,99999)
-fw.mem1##23%
-fw.mem1=fw.mem1[order(fw.mem1$order),]##selection of MEM 
-
-##conclusion: only pca of fcm can be discussed
-
-
-##biotic and abio ##24%!! 
+#40 % of iv variance is explained by space (last line, AdjR2Cum)
+#6 spatial predictors
 rda.mem=rda(iv$tab,Umem)
 summary(rda.mem)
 R2a.mem=RsquareAdj(rda.mem)$adj.r.squared
@@ -302,8 +293,8 @@ detach('package:spdep')
 detach('package:adespatial')
 detach('package:vegan')
 detach('package:packfor')
-
-par(mfrow=c(2,2),mar=c(3,3,3,3))
+require(purrr)
+par(mfrow=c(4,2),mar=c(3,3,3,3))
 for(i in 1:ncol(pre.mem)){
   plot(xy,type="n",main=colnames(pre.mem)[i],
        cex.main=1.5,bty="n",xaxt="n",yaxt="n")
@@ -314,29 +305,38 @@ for(i in 1:ncol(pre.mem)){
 #PCAIV on MEMs
 iv.mem=pcaiv(iv,pre.mem)
 plot(iv.mem)
-randtest(iv.mem,999)##significant
+
 #Projection of abiotic variables
 w=pcaiv(dudi.pca(abio.o$tab,scan=F),pre.mem,scan=F)
 #The data (iv.abio$tab) are projected onto the iv.mem system
 sup=t(w$tab)%*%as.matrix(iv.mem$l1)
 s.arrow(sup)
+dev.off()
 
 #The spatialization of the ecological pattern is mostly
 #explained along a first axis by MEM5 and MEM7
 #They explain the increasing concentration of
 #Zoopl_Appendicularia and Zoopl_Noctiluca densities
-#with decreasing salinity and increasing N concentration
+#with decreasing salinity, depth and increasing N concentration and T
 #in coastal areas, from the center of the area to the coasts
+##a second pattern expressed along the second axis (MEM4 and MEM3), explain the decreasing current velocity, and align with the echinodermata whilst harpacticoida like high current velocity.
+
 par(mfrow=c(2,3),mar=c(3,3,3,3))
-for(i in 1:4){
+for(i in 1:7){
   plot(xy,type="n",main=colnames(pre.mem)[i],
        cex.main=1.5,bty="n",xaxt="n",yaxt="n")
   map("worldHires",add=T)
   s.value(xy,pre.mem[,i],cleg=0,csize=1.5,add.p=T)
 }
-s.corcircle(iv.mem$cor,clab=1.3)
+dev.off()
+s.corcircle(iv.mem$cor,clab=1)
 s.arrow(sup,clab=1,xlim=c(-50,40))
-s.arrow(iv.mem$c1,clab=1,xlim=c(-1.2,0.4))
+s.arrow(iv.mem$c1,clab=0.8,xlim=c(-0.7,1.3))
+
+
+
+
+
 
 
 
@@ -633,3 +633,4 @@ chooseCN <- function(xy, ask = TRUE, type = NULL, result.type = "nb",
   return(res)
   
 } # end chooseCN
+save("chooseCN", file="chooseCN.Rdata")
