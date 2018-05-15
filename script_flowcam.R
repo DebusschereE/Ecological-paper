@@ -13,7 +13,7 @@ t$N.P.Si<-(t$Nutr_NO2+t$Nutr_NO3+t$Nutr_NOX)/t$Nutr_PO4/t$Nutr_SiO2
 colnames(t)
 #select dataframe geographic coordinates, flowcam, abiotic parameters
 #
-df=t[,c(3:4, 5:10, 168:170,166:167,72,75:76 ,127, 130:157 )]
+df=t[,c(3:4, 5:10,168:170 ,72,75:76 ,127, 130:157,166:167)]
 #remove NA rows for biolplankton
 df<-na.omit(df)
 
@@ -31,8 +31,9 @@ biol=df[,c(16:32, 34:43)]
 xy=df[,c(2,1)]
 
 #Abiotic
-abio=df[,3:15]
-
+abio=df[,c(3:15,44:45)]
+#rename Night to 0 and Day to 1 in the column dayornight
+abio$DayorNight<-ifelse(abio$DayorNight=="Night","0","1")
 
 #Mapping abiotic data
 #Large white squares, low values
