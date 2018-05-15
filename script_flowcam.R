@@ -17,7 +17,6 @@ require(ade4)
 require(maps)
 require(mapdata)
 require(dplyr)
-#Data
 
 #Load Data
 t=read.csv("data/Cruise_data_2017_V11_complete_Flowcam_NGS.csv",h=T,row.names=1)
@@ -31,10 +30,6 @@ t$N.P<-(t$Nutr_NO2+t$Nutr_NO3+t$Nutr_NOX)/t$Nutr_PO4
 t$N.P.Si<-(t$Nutr_NO2+t$Nutr_NO3+t$Nutr_NOX)/t$Nutr_PO4/t$Nutr_SiO2
 
 colnames(t)
-#select dataframe geographic coordinates, flowcam, abiotic parameters
-#
-df=t[,c(3:4, 5:10,168:170 ,72,75:76 ,127, 130:157,166:167)]
-#remove NA rows for biolplankton
 #### Create necessary dataframes ####
 #select dataframe geographic coordinates, flowcam, abiotic parameters, and dayornight, number of day
 #(the latter two are needed to check for temporal dependence)
@@ -43,38 +38,26 @@ df=t[,c(3:4, 5:10,168:170 ,72,75:76 ,127, 130:157, 166:167)]
 #remove NA rows for plankton
 df<-na.omit(df)
 
-#flowcam
 colnames(df)
 #Noctiluca will not be incorporated in this data analysis of flowcam as this is zooplankton
 biol=df[,c(16:32, 34:43)]
 
-##chek correlation with flowcam noctiluca and zooscan noctiluca
-#check for high number of zeros per column
-#colSums(biol == 0)
-#colnames(biol)
-#biol<-biol[,c(1,4,7:8,10:11,17,19:24,27)]
 #Geographic coordinates
 xy=df[,c(2,1)]
 
 #Abiotic
-abio=df[,c(3:15,44:45)]
-#rename Night to 0 and Day to 1 in the column dayornight
-abio$DayorNight<-ifelse(abio$DayorNight=="Night","0","1")
 abio=df[,3:15]
 
 #Mapping abiotic data
 #Large white squares, low values
 #Small squares, intermediate values
 #Large squares, high values
-#Remark: a priori, is "relative humidity"
-#a pertinent variable for aquatic organisms?
 par(mfrow=c(3,3),mar=c(2,2,3,1))
 for(i in 1:ncol(abio)){
   plot(xy,type="n",main=colnames(abio)[i],cex.main=1.5)
   map("worldHires",add=T)
   s.value(xy,scalewt(abio)[,i],cleg=0,add.p=T)
 }
-
 
 #same for biotic groups of flowcam
 par(mfrow=c(3,3),mar=c(2,2,3,1))
@@ -83,7 +66,6 @@ for(i in 1:ncol(biol)){
   map("worldHires",add=T)
   s.value(xy,scalewt(biol)[,i],cleg=0,add.p=T)
 }
-
 #### PCA and PCAIV with raw data ####
 #PCA of biol
 #Keep 3 axes
@@ -127,11 +109,8 @@ for(i in 1:ncol(abio)){
 #In this numerical context, you can say that PCAIV <=> RDA
 #Keep 3 axes
 iv=pcaiv(pcaz,abio, scannf=FALSE, nf=3)
-iv
 
 #Proportion of explained variance (R squared)
-sum(iv$eig)/sum(pcaz$eig)
-##71.5% explained
 sum(iv$eig)/sum(pcaz$eig) 
 ##71.50% explained
 
@@ -153,7 +132,6 @@ iv$ls
 #They results from the passive projection
 #of the raw biol data onto the axes (arrow tips)
 #Arrow length = lack of fitting = residual
-s.match(iv$li,iv$ls, clab=0.5)
 dev.off()
 s.match(iv$li,iv$ls, clab=0.5) #some stations show a lack of fit
 
@@ -376,6 +354,7 @@ detach('package:vegan')
 detach('package:packfor')
 
 par(mfrow=c(2,2),mar=c(3,3,3,3))
+dev.off()
 for(i in 1:ncol(pre.mem)){
   plot(xy,type="n",main=colnames(pre.mem)[i],
        cex.main=1.5,bty="n",xaxt="n",yaxt="n")
@@ -383,10 +362,11 @@ for(i in 1:ncol(pre.mem)){
   s.value(xy,pre.mem[,i],cleg=0,csize=1.5,add.p=T)
 }
 
-#PCAIV on MEMs
-iv.mem=pcaiv(iv,pre.mem,scannf=FALSE, nf=3)
-#hiermee bereken je dan de R2CUM   sum(iv.mem$eig)/sum(iv$eig)
 
+#PCAIV on MEMs
+iv.mem=pcaiv(iv.o,pre.mem,scannf=FALSE, nf=3)
+#hiermee bereken je dan de R2CUM   sum(iv.mem$eig)/sum(iv$eig)
+sum(iv.mem$eig)/sum(iv.o$eig) #24% same as the R²cum which is not adjusted
 plot(iv.mem)
 
 #Projection of abiotic variables
@@ -401,21 +381,19 @@ s.arrow(sup)
 #biolpl_Appendicularia and biolpl_Noctiluca densities
 #with decreasing salinity and increasing N concentration
 #in coastal areas, from the center of the area to the coasts
-par(mfrow=c(2,3),mar=c(3,3,3,3))
-for(i in 1:5){
+par(mfrow=c(3,1),mar=c(3,3,3,3))
+for(i in 1:3){
   plot(xy,type="n",main=colnames(pre.mem)[i],
        cex.main=2,bty="n",xaxt="n",yaxt="n")
   map("worldHires",add=T)
   s.value(xy,pre.mem[,i],cleg=0,csize=1.5,add.p=T)
 }
+
+#visualizations of bio,abio,stations and MEMs on the pcaiv axes
 dev.off()
+
 s.corcircle(iv.mem$cor,clab=1)
 s.arrow(sup,clab=0.8,xlim=c(-50,40))
-s.arrow(iv.mem$c1,clab=0.5,xlim=c(-0.8,0.1))
+s.arrow(iv.mem$c1,clab=0.5,xlim=c(-0.1,0.5))
 s.match(iv.mem$li,iv.mem$ls, clab=0.5)
-
-
-
-
-
 
