@@ -178,8 +178,6 @@ for(i in 1:3){
   box()
 }
 ##axis 1 : large influence of the thames
-##axis 2: defined by coastal zone BE+ NL
-##axis 3: channel and Meuse outflow determine this
 ##axis 2: defined by channel, deeper water(higher salinity) and UK coast
 ##axis 3: defined by coastal zones Fr and BE
 dev.off()
@@ -188,17 +186,25 @@ s.corcircle(iv$cor,clab=1)
 s.arrow(iv$c1,clab=0.55,xlim=c(-0.1,0.2))
 s.arrow(iv$c1,clab=0.45,xlim=c(-0.2,0.2),ylim=c(-0.2,0.2))
 
+#### Temporal influence on raw data ####
+#check if time of day of sampling is important or number of day in the cruise
+df$Numberofday<-as.factor(df$Numberofday)
+df$DayorNight<-as.factor(df$DayorNight)
+par(mfrow=c(1,2))
+s.class(iv$li,df$Numberofday) #ellipse do not nicely overlap, meaning there is an influence, will be solved later on in the script. Detrending the data is necessary
+s.class(iv$li,df$DayorNight)
 
 
 ###spatial analysis ####
 
+#Load packages
 require(adegraphics)
 require(spdep)
 require(adespatial)
 require(vegan)
 install.packages("packfor", repos="http://R-Forge.R-project.org") 
 require(packfor)
-
+library(spdep)
 
 #A relatively recent development generating
 #spatial predictors hierarchically
@@ -208,17 +214,17 @@ require(packfor)
 #and spatial predictors are derived
 #They are called Moran's Eigenvector Maps (MEM)
 #They are perfectly independent (orthogonal)
-library(spdep)
 #Choosing a connection network among stations
+
+####Create the connected map ####
+
+#can be skipped if the spatial map is constructed and saved
 load("chooseCN.Rdata")
 cn=chooseCN(xy,res="listw",type=1,plot.nb=F)
-cn
-#cn<-connection.network
 #Triangulation is the simplest one
 dev.off()
 plot(cn,xy)
 map("worldHires",add=T)
-
 #Note that some distance crossing lands could be removed
 #You can remove them
 nb=tri2nb(xy)
@@ -226,17 +232,19 @@ nb=tri2nb(xy)
 #Remove the links crossing the lands
 #by clicking on the connected stations
 nb=edit(nb,xy) ##R loopt hierop vast
-
 #Plot again
 cn=nb2listw(nb,style="W")
 cnflowcam<-cn
 save(cnflowcam, file="cnflowcam.RData")
+
+#Load this spatial map 
 load("data/cnflowcam.RData")
 cn<-cnflowcam
 plot(cn,xy)
 map("worldHires",add=T)
 library(adespatial)
-#MEM computation
+
+#### MEM computation ####
 #There are 38 stations, so 38-1=37 spatial predictors
 #They represent all the possible scales
 #that can be investigated in this data set
@@ -287,7 +295,9 @@ memtest=moran.randtest(umem,cn,999,"two-sided")
 names(memtest)
 Umem=umem[,memtest[[7]]<0.05]
 
+#### Test for spatial dependence beyond study area scale and temporal dependence ####
 
+#Spatial dependence:
 #Test of biol vs xy correlation
 randtest(pcaiv(pcaz,xy,scan=F),999)
 #Test of abio vs xy correlation
@@ -301,31 +311,49 @@ randtest(pcaiv(dudi.pca(abio,scan=F),xy,scan=F),999)
 #through Orthogonal PCAIV
 biol.o=pcaivortho(pcaz,xy,scan=F)
 abio.o=pcaivortho(dudi.pca(abio,scan=F),xy,scan=F)
-
 #The detrended PCAIV
-iv=pcaiv(biol.o,abio.o$tab, scannf=FALSE, nf=3)
-randtest(iv,999)##significant
-sum(iv$eig)/sum(pcaz$eig)#43.9% explained by abiotic parameters
+iv.o=pcaiv(biol.o,abio.o$tab, scannf=FALSE, nf=3)
+#check if the detrending data also have a temporal dependence
+df$Numberofday<-as.factor(df$Numberofday)
+df$DayorNight<-as.factor(df$DayorNight)
+par(mfrow=c(1,2))
+s.class(iv.o$li,df$Numberofday)
+s.class(iv.o$li,df$DayorNight)
+
+w=lm(iv.o$li[,1]~df$DayorNight)
+anova(w)#axis 1 has a significant influence, 
+#detrending of this temporal influence (day/night) is necessary
+#start again with original data
+spacetime=cbind(xy,df$DayorNight)
+biol.o=pcaivortho(pcaz,spacetime,scan=F)
+abio.o=pcaivortho(dudi.pca(abio,scan=F),spacetime,scan=F)
+
+#pcaiv of the detrended data (xy and dayornight)
+iv.o=pcaiv(biol.o,abio.o$tab, scannf=FALSE, nf=3)
+#Permutation test
+randtest(iv.o,999)##significant
+sum(iv.o$eig)/sum(biol.o$eig)#62.14% explained by abiotic parameters
+plot(iv.o)
 #https://cran.r-project.org/web/packages/adespatial/vignettes/tutorial.html
-#Finding spatial predictors of iv
-#31.4 % of iv variance is explained by space (last line, AdjR2Cum)
 
-###spatialized of bio: 18%
+#### Finding spatial predictors of iv ####
+#explanation by space is defined by the last line, AdjR2Cum
+
+###spatialized of bio: 4.38%
 rda.mem1=rda(biol.o$tab,Umem)
-
 R2a.mem1=RsquareAdj(rda.mem1)$adj.r.squared
 fw.mem1=forward.sel(biol.o$tab,Umem,adjR2thresh=R2a.mem1,99999)
-fw.mem1
 fw.mem1=fw.mem1[order(fw.mem1$order),]##selection of MEM 
 
 #Spatialized of bio+abio
-rda.mem=rda(iv$tab,Umem)
+rda.mem=rda(iv.o$tab,Umem)
 summary(rda.mem)
 R2a.mem=RsquareAdj(rda.mem)$adj.r.squared
-fw.mem=forward.sel(iv$tab,Umem,adjR2thresh=R2a.mem,99999)
-fw.mem
+fw.mem=forward.sel(iv.o$tab,Umem,adjR2thresh=R2a.mem,99999)
 fw.mem=fw.mem[order(fw.mem$order),]##selection of MEM 
-#36.48%
+fw.mem
+#18.32% of the 62.14% is explained by space
+#MEM7, 9 and 11 explain the spatial pattern
 
 
 #Selected predictors ##for each station
