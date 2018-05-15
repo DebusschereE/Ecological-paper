@@ -3,9 +3,8 @@ require(ade4)
 require(maps)
 require(mapdata)
 require(dplyr)
-setwd("~/Jerico next 2017 cruise/data")
 #Data
-t=read.csv("Cruise_data_2017_V9_complete_Flowcam_NGS.csv",h=T,row.names=1)
+t=read.csv("data/Cruise_data_2017_V11_complete_Flowcam_NGS.csv",h=T,row.names=1)
 
 t$N.Si<-(t$Nutr_NO2+t$Nutr_NO3+t$Nutr_NOX)/t$Nutr_SiO2
 t$N.P<-(t$Nutr_NO2+t$Nutr_NO3+t$Nutr_NOX)/t$Nutr_PO4
@@ -14,7 +13,7 @@ t$N.P.Si<-(t$Nutr_NO2+t$Nutr_NO3+t$Nutr_NOX)/t$Nutr_PO4/t$Nutr_SiO2
 colnames(t)
 #select dataframe geographic coordinates, flowcam, abiotic parameters
 #
-df=t[,c(3:4, 5:10, 166:168,72,75:76 ,127, 130:157)]
+df=t[,c(3:4, 5:10, 166:168,72,75:76 ,127, 130:157, )]
 #remove NA rows for biolplankton
 df<-na.omit(df)
 
@@ -103,7 +102,7 @@ iv
 
 #Proportion of explained variance (R squared)
 sum(iv$eig)/sum(pcaz$eig)
-##75.2% explained
+##71.5% explained
 #Global summary (axes 1 and 2)
 plot(iv)
 
@@ -122,7 +121,7 @@ iv$ls
 #They results from the passive projection
 #of the raw biol data onto the axes (arrow tips)
 #Arrow length = lack of fitting = residual
-s.match(iv$li,iv$ls)
+s.match(iv$li,iv$ls, clab=0.5)
 
 #Abio variables
 #Salinity is the most influential variable
@@ -147,6 +146,13 @@ for(i in 1:3){
 ##axis 1 : large influence of the thames
 ##axis 2: defined by coastal zone BE+ NL
 ##axis 3: channel and Meuse outflow determine this
+dev.off()
+s.match(iv$li,iv$ls, clab=0.5)
+s.corcircle(iv$cor,clab=1)
+s.arrow(iv$c1,clab=0.55,xlim=c(-0.1,0.2))
+s.arrow(iv$c1,clab=0.45,xlim=c(-0.2,0.2),ylim=c(-0.2,0.2))
+
+
 
 ###spatial analysis ####
 
@@ -189,7 +195,7 @@ nb=edit(nb,xy) ##R loopt hierop vast
 cn=nb2listw(nb,style="W")
 cnflowcam<-cn
 save(cnflowcam, file="cnflowcam.RData")
-load("cnflowcam.RData")
+load("data/cnflowcam.RData")
 cn<-cnflowcam
 plot(cn,xy)
 map("worldHires",add=T)
@@ -199,6 +205,7 @@ library(adespatial)
 #They represent all the possible scales
 #that can be investigated in this data set
 umem=scores.listw(cn)
+
 #Test the significance of Moran's I for MEMs
 moran.randtest <- function(x, listw, nrepet = 999, ... ){
   
@@ -262,6 +269,7 @@ abio.o=pcaivortho(dudi.pca(abio,scan=F),xy,scan=F)
 #The detrended PCAIV
 iv=pcaiv(biol.o,abio.o$tab, scannf=FALSE, nf=3)
 randtest(iv,999)##significant
+sum(iv$eig)/sum(pcaz$eig)#43.9% explained by abiotic parameters
 #https://cran.r-project.org/web/packages/adespatial/vignettes/tutorial.html
 #Finding spatial predictors of iv
 #31.4 % of iv variance is explained by space (last line, AdjR2Cum)
@@ -281,9 +289,7 @@ R2a.mem=RsquareAdj(rda.mem)$adj.r.squared
 fw.mem=forward.sel(iv$tab,Umem,adjR2thresh=R2a.mem,99999)
 fw.mem
 fw.mem=fw.mem[order(fw.mem$order),]##selection of MEM 
-#31%
-
-##check difference of explained vairance (adj R²) ##same, no difference!!!! strange result
+#36.48%
 
 
 #Selected predictors ##for each station
@@ -315,6 +321,8 @@ for(i in 1:ncol(pre.mem)){
 
 #PCAIV on MEMs
 iv.mem=pcaiv(iv,pre.mem,scannf=FALSE, nf=3)
+#hiermee bereken je dan de R2CUM   sum(iv.mem$eig)/sum(iv$eig)
+
 plot(iv.mem)
 
 #Projection of abiotic variables
@@ -329,8 +337,8 @@ s.arrow(sup)
 #biolpl_Appendicularia and biolpl_Noctiluca densities
 #with decreasing salinity and increasing N concentration
 #in coastal areas, from the center of the area to the coasts
-par(mfrow=c(1,3),mar=c(3,3,3,3))
-for(i in 1:3){
+par(mfrow=c(2,3),mar=c(3,3,3,3))
+for(i in 1:5){
   plot(xy,type="n",main=colnames(pre.mem)[i],
        cex.main=2,bty="n",xaxt="n",yaxt="n")
   map("worldHires",add=T)
@@ -338,9 +346,9 @@ for(i in 1:3){
 }
 dev.off()
 s.corcircle(iv.mem$cor,clab=1)
-s.arrow(sup,clab=1,xlim=c(-50,40))
+s.arrow(sup,clab=0.8,xlim=c(-50,40))
 s.arrow(iv.mem$c1,clab=0.5,xlim=c(-0.8,0.1))
-
+s.match(iv.mem$li,iv.mem$ls, clab=0.5)
 
 
 

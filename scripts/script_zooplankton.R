@@ -5,7 +5,7 @@ require(mapdata)
 require(dplyr)
 
 #Data
-t=read.csv("data/Cruise_data_2017_V9_complete_Flowcam_NGS.csv",h=T,row.names=1)
+t=read.csv("data/Cruise_data_2017_V10_complete_Flowcam_NGS.csv",h=T,row.names=1)
 
 t$N.Si<-(t$Nutr_NO2+t$Nutr_NO3+t$Nutr_NOX)/t$Nutr_SiO2
 t$N.P<-(t$Nutr_NO2+t$Nutr_NO3+t$Nutr_NOX)/t$Nutr_PO4
@@ -64,9 +64,9 @@ pcaz=dudi.pca(log(zoo+1),scale=F, scannf=FALSE, nf=3)
 
 #Eigenvalues expressed in %
 100*pcaz$eig/sum(pcaz$eig)
-
+dev.off()
 #Zoo variables
-s.arrow(pcaz$co,clab=1)
+s.arrow(pcaz$co,clab=0.5)
 
 #Zoo stations
 s.label(pcaz$li)
@@ -120,7 +120,13 @@ iv$ls
 #They results from the passive projection
 #of the raw zoo data onto the axes (arrow tips)
 #Arrow length = lack of fitting = residual
-s.match(iv$li,iv$ls)
+dev.off()
+s.match(iv$li,iv$ls, clab=0.5)
+s.corcircle(iv$cor,clab=1)
+s.arrow(iv$c1,clab=0.55,xlim=c(-0.1,0.2))
+s.arrow(iv$c1,clab=0.55,xlim=c(-0.1,0.2),ylim=c(-0.1,0.2))
+
+
 
 #Abio variables
 #Salinity is the most influential variable
@@ -265,8 +271,8 @@ iv=pcaiv(zoo.o,abio.o$tab)
 randtest(iv,999)##significant
 #https://cran.r-project.org/web/packages/adespatial/vignettes/tutorial.html
 #Finding spatial predictors of iv
-#40 % of iv variance is explained by space (last line, AdjR2Cum)
-#6 spatial predictors
+#43.5 % of iv variance is explained by space (last line, AdjR2Cum)
+#7 spatial predictors
 rda.mem=rda(iv$tab,Umem)
 summary(rda.mem)
 R2a.mem=RsquareAdj(rda.mem)$adj.r.squared

@@ -2,3 +2,6 @@
 .Rhistory
 .RData
 .Ruserdata
+##extra folders that you don't want to commit, bv folder benoemen draft
+draft/* 
+##sterretje geeft weer dat alles na draft niet gecommit moet worden
