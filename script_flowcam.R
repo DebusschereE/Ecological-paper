@@ -132,6 +132,9 @@ iv
 #Proportion of explained variance (R squared)
 sum(iv$eig)/sum(pcaz$eig)
 ##71.5% explained
+sum(iv$eig)/sum(pcaz$eig) 
+##71.50% explained
+
 #Global summary (axes 1 and 2)
 plot(iv)
 
@@ -151,6 +154,8 @@ iv$ls
 #of the raw biol data onto the axes (arrow tips)
 #Arrow length = lack of fitting = residual
 s.match(iv$li,iv$ls, clab=0.5)
+dev.off()
+s.match(iv$li,iv$ls, clab=0.5) #some stations show a lack of fit
 
 #Abio variables
 #Salinity is the most influential variable
@@ -175,6 +180,8 @@ for(i in 1:3){
 ##axis 1 : large influence of the thames
 ##axis 2: defined by coastal zone BE+ NL
 ##axis 3: channel and Meuse outflow determine this
+##axis 2: defined by channel, deeper water(higher salinity) and UK coast
+##axis 3: defined by coastal zones Fr and BE
 dev.off()
 s.match(iv$li,iv$ls, clab=0.5)
 s.corcircle(iv$cor,clab=1)
