@@ -13,7 +13,7 @@ t$N.P.Si<-(t$Nutr_NO2+t$Nutr_NO3+t$Nutr_NOX)/t$Nutr_PO4/t$Nutr_SiO2
 colnames(t)
 #select dataframe geographic coordinates, flowcam, abiotic parameters
 #
-df=t[,c(3:4, 5:10, 166:168,72,75:76 ,127, 130:157, )]
+df=t[,c(3:4, 5:10, 168:170,166:167,72,75:76 ,127, 130:157 )]
 #remove NA rows for biolplankton
 df<-na.omit(df)
 
