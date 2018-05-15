@@ -1,3 +1,14 @@
+#### FLOWCAM script ####
+#script is based on work of Olivier Beauchard and Elisabeth Debusschere
+#Jerico-Next LifeWatch cruise by RV Simon Stevin, lead by VLIZ (Jonas Mortelmans)
+#May 8-11 2017
+#samples of the flowcam are processed by Luz Amadei Martinéz
+
+#Aim of this scrpit: analyse influence of abiotic parameters on phytoplankton groups identified by the flowcam
+## look at the spatial scale at which these influences occur
+
+#Hypothesis: river outflow will determine the phytoplankton communities
+
 rm(list=ls())
 require(ade4)
 require(maps)
