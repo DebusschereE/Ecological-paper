@@ -1,11 +1,31 @@
+#### FLOWCAM script ####
+#script is based on work of Olivier Beauchard and Elisabeth Debusschere
+#Jerico-Next LifeWatch cruise by RV Simon Stevin, lead by VLIZ (Jonas Mortelmans)
+#May 8-11 2017
+#samples of the flowcam are processed by Luz Amadei Martinéz
+
+#Aim of this scrpit: analyse influence of abiotic parameters on phytoplankton groups identified by the flowcam
+## look at the spatial scale at which these influences occur
+
+#Hypothesis: river outflow will determine the phytoplankton communities
+
+#start fresh
 rm(list=ls())
+
+#load necessary libraries
 require(ade4)
 require(maps)
 require(mapdata)
 require(dplyr)
 #Data
+
+#Load Data
 t=read.csv("data/Cruise_data_2017_V11_complete_Flowcam_NGS.csv",h=T,row.names=1)
 
+#make DayorNight numeric
+t$DayorNight<-ifelse(t$DayorNight=="Night","0","1")
+
+#add extra ratios of nutrients to the dataframe
 t$N.Si<-(t$Nutr_NO2+t$Nutr_NO3+t$Nutr_NOX)/t$Nutr_SiO2
 t$N.P<-(t$Nutr_NO2+t$Nutr_NO3+t$Nutr_NOX)/t$Nutr_PO4
 t$N.P.Si<-(t$Nutr_NO2+t$Nutr_NO3+t$Nutr_NOX)/t$Nutr_PO4/t$Nutr_SiO2
@@ -15,6 +35,12 @@ colnames(t)
 #
 df=t[,c(3:4, 5:10,168:170 ,72,75:76 ,127, 130:157,166:167)]
 #remove NA rows for biolplankton
+#### Create necessary dataframes ####
+#select dataframe geographic coordinates, flowcam, abiotic parameters, and dayornight, number of day
+#(the latter two are needed to check for temporal dependence)
+df=t[,c(3:4, 5:10,168:170 ,72,75:76 ,127, 130:157, 166:167)]
+
+#remove NA rows for plankton
 df<-na.omit(df)
 
 #flowcam
@@ -34,6 +60,7 @@ xy=df[,c(2,1)]
 abio=df[,c(3:15,44:45)]
 #rename Night to 0 and Day to 1 in the column dayornight
 abio$DayorNight<-ifelse(abio$DayorNight=="Night","0","1")
+abio=df[,3:15]
 
 #Mapping abiotic data
 #Large white squares, low values
@@ -57,6 +84,7 @@ for(i in 1:ncol(biol)){
   s.value(xy,scalewt(biol)[,i],cleg=0,add.p=T)
 }
 
+#### PCA and PCAIV with raw data ####
 #PCA of biol
 #Keep 3 axes
 #"scale=F", no reduction, better for
