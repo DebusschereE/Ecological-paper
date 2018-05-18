@@ -1,5 +1,6 @@
+rm(list=ls())
 ### Phytoplankton ####
-t=read.csv("Cruise_data_2017_V9_complete_Flowcam_NGS.csv",h=T,row.names=1)
+t=read.csv("data/Cruise_data_2017_V10_complete_Flowcam_NGS.csv",h=T,row.names=1)
 install.packages("easypackages")
 library(easypackages)
 
@@ -13,7 +14,7 @@ df=t[,c(83:112,130:165)]
 colnames(df)
 ### compare NGS and Chemtax ####
 
-dff<-df[,c(25:30, 60:66)]
+dff<-df[,c(27,30, 60:61)]
 #remove NA rows for plankton
 
 res <- rcorr(as.matrix(dff,type="spearman"))

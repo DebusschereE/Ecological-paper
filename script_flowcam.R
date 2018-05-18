@@ -160,10 +160,10 @@ for(i in 1:3){
 ##axis 1 : large influence of the thames
 ##axis 2: defined by channel, deeper water(higher salinity) and UK coast
 ##axis 3: defined by coastal zones Fr and BE
-dev.off()
-s.match(iv$li,iv$ls, clab=0.5)
+par(mfrow=c(1,2),mar=c(2,2,3,1))
 s.corcircle(iv$cor,clab=1)
 s.arrow(iv$c1,clab=0.55,xlim=c(-0.1,0.2))
+s.match(iv$li,iv$ls, clab=0.5)
 s.arrow(iv$c1,clab=0.45,xlim=c(-0.2,0.2),ylim=c(-0.2,0.2))
 
 #### Temporal influence on raw data ####
@@ -314,6 +314,9 @@ iv.o=pcaiv(biol.o,abio.o$tab, scannf=FALSE, nf=3)
 randtest(iv.o,999)##significant
 sum(iv.o$eig)/sum(biol.o$eig)#62.14% explained by abiotic parameters
 plot(iv.o)
+par(mfrow=c(1,2),mar=c(2,2,3,1))
+s.corcircle(iv.o$cor,clab=1)
+s.arrow(iv.o$c1,clab=0.55,xlim=c(-0.5,0.2))
 #https://cran.r-project.org/web/packages/adespatial/vignettes/tutorial.html
 
 #### Finding spatial predictors of iv ####
@@ -393,9 +396,9 @@ for(i in 1:3){
 
 #visualizations of bio,abio,stations and MEMs on the pcaiv axes
 dev.off()
-
-s.corcircle(iv.mem$cor,clab=1)
-s.arrow(sup,clab=0.8,xlim=c(-50,40))
-s.arrow(iv.mem$c1,clab=0.5,xlim=c(-0.1,0.5))
+par(mfrow=c(1,3),mar=c(2,2,3,1))
+s.corcircle(iv.mem$cor,clab=2)
+s.arrow(sup,clab=2,xlim=c(-50,40))
+s.arrow(iv.mem$c1,clab=1.5,xlim=c(-0.5,0.8))
 s.match(iv.mem$li,iv.mem$ls, clab=0.5)
 

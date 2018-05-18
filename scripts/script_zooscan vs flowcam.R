@@ -262,20 +262,18 @@ iv=pcaiv(zoo.o,abio.o$tab)
 randtest(iv,999)##not significant
 #https://cran.r-project.org/web/packages/adespatial/vignettes/tutorial.html
 #Finding spatial predictors of iv
-#48 % of iv variance is explained by space (last line, AdjR2Cum)
 
 ###spatialized of bio
+
 rda.mem1=rda(zoo.o$tab,Umem)
 
 R2a.mem1=RsquareAdj(rda.mem1)$adj.r.squared
 fw.mem1=forward.sel(zoo.o$tab,Umem,adjR2thresh=R2a.mem1,99999)
-fw.mem1##23%
+fw.mem1##23%of iv variance is explained by space (last line, AdjR2Cum)
 fw.mem1=fw.mem1[order(fw.mem1$order),]##selection of MEM 
 
-##conclusion: only pca of fcm can be discussed
 
-
-##biotic and abio ##24%!! 
+##biotic and abio ##28.6 % of iv variance is explained by space (last line, AdjR2Cum)
 rda.mem=rda(iv$tab,Umem)
 summary(rda.mem)
 R2a.mem=RsquareAdj(rda.mem)$adj.r.squared
@@ -328,15 +326,16 @@ s.arrow(sup)
 #with decreasing salinity and increasing N concentration
 #in coastal areas, from the center of the area to the coasts
 par(mfrow=c(2,3),mar=c(3,3,3,3))
-for(i in 1:4){
+for(i in 1:5){
   plot(xy,type="n",main=colnames(pre.mem)[i],
        cex.main=1.5,bty="n",xaxt="n",yaxt="n")
   map("worldHires",add=T)
   s.value(xy,pre.mem[,i],cleg=0,csize=1.5,add.p=T)
 }
+dev.off()
 s.corcircle(iv.mem$cor,clab=1.3)
-s.arrow(sup,clab=1,xlim=c(-50,40))
-s.arrow(iv.mem$c1,clab=1,xlim=c(-1.2,0.4))
+s.arrow(sup,clab=0.5,xlim=c(-50,40))
+s.arrow(iv.mem$c1,clab=0.5,xlim=c(-1.4,0.8))
 
 
 
