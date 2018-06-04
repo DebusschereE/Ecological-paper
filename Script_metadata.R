@@ -3,6 +3,9 @@
 #Jerico-Next LifeWatch cruise by RV Simon Stevin, led by VLIZ (Jonas Mortelmans)
 #May 8-11 2017
 t=read.csv("data/Cruise_data_2017_V11_complete_Flowcam_NGS.csv",h=T,row.names=1)
+
+#### 1.  Complete df with additional parameters ####
+
 #make DayorNight numeric
 t$DayorNight<-ifelse(t$DayorNight=="Night","0","1")
 
@@ -12,6 +15,7 @@ t$N.P<-(t$Nutr_NO2+t$Nutr_NO3+t$Nutr_NOX)/t$Nutr_PO4
 t$N.P.Si<-(t$Nutr_NO2+t$Nutr_NO3+t$Nutr_NOX)/t$Nutr_PO4/t$Nutr_SiO2
 # Sensors present during the trip
 
+#### 2. add units to each parameter ####
 #1.Flowcam: phytoplankton groups (100 - 300µm), processed by Luz Amadei Martinéz
 #2.Zooscan: zooplankton groups (300 - 2000µm), processed by Jonas Mortelmans
 #3.FCM (vliz): size groups of Phytoplankton (<800µm), processed by Machteld Rijkeboer
@@ -48,7 +52,7 @@ names(t)
 #only fcm of vliz was used since this had the highest number of station sampled.
 #wisp, frrf data was skipped
 
-
+#### 3. rename parameters ####
 #create final dataframe with all relevant parameters per station
 df=t[,c(3:4, 5:10,168:170,72,75:76, 127,166:167,43:64,107:112, 130:157)]
 names(df)
@@ -98,5 +102,9 @@ names(df)
 #40:45 chemtax based phytoplankton groups (µg chlorophyll a per liter)
 #46:73 flowcam based phytoplankton groups (cells per liter)
 
-write.csv("df","stationdf.csv")
+####4. clean dataframe ####
+#remove NA rows
+df<-na.omit(df) #from 44 stations to 38 stations
 
+write.csv(df,"stationdf.csv")
+#first column are the station numbers, I added manually the column name "Station" after export
