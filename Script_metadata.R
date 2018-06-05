@@ -54,7 +54,7 @@ names(t)
 
 #### 3. rename parameters ####
 #create final dataframe with all relevant parameters per station
-df=t[,c(3:4, 5:10,168:170,72,75:76, 127,166:167,43:64,107:112, 130:157)]
+df=t[,c(3:4, 5:10,168:170,72,75:76, 127,166:167,43:64,107:112, 130:157, 99:106)]
 names(df)
 #rename all parameters
 names(df)[3] <- "NH4"
@@ -86,12 +86,30 @@ names(df)[32] <- "Echinodermata"
 names(df)[33] <- "Harpacticoida"
 names(df)[34] <- "Mollusca"
 names(df)[35] <- "Mysidae"
-names(df)[36] <- "Noctiluca"
+#Noctiluca was found both by zooscan and flowcam, therefore it needs to be specified in db
+names(df)[36] <- "Noctiluca.zoopl"
 names(df)[37] <- "Pisces.egg"
 names(df)[38] <- "Pisces.larvae"
 names(df)[39] <- "Porcellanidae.zoe"
+#flowcam found also Noctiluca should therefore be clear in db
+names(df)[63] <- "Noctiluca_phyto"
+names(df)[74] <- "nano_totFLR"
+names(df)[75] <- "micro_totFLR"
+names(df)[76] <- "macro_totFLR"
+names(df)[77] <- "pico_totFLR"
+names(df)[78] <- "pico_conc"
+names(df)[79] <- "nano_conc"
+names(df)[80] <- "micro_conc"
+names(df)[81] <- "macro_conc"
+
 #zooplankton unit needs to be rescaled to cells per L (now it's cells per 1000L)
 df[,18:39]<-df[,18:39]/1000
+
+#fcm data is per ml, should be rescaled ot liter
+
+
+
+
 #overview of the newly formed dataframe
 names(df)
 #1:2 lat & lon (decimal degrees)
@@ -104,7 +122,7 @@ names(df)
 
 ####4. clean dataframe ####
 #remove NA rows
-df<-na.omit(df) #from 44 stations to 38 stations
+df<-na.omit(df) #from 44 stations to 36 stations
 
 write.csv(df,"stationdf.csv")
 #first column are the station numbers, I added manually the column name "Station" after export
